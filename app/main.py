@@ -1,4 +1,5 @@
 import csv
+import json
 import io
 import pandas as pd
 from fastapi import FastAPI, UploadFile, File
@@ -26,7 +27,7 @@ def update_item(item_id: int, item: Item):
 
 @app.post("/uploadfile/")
 async def create_upload_file(file: UploadFile):
-    if file.filename.endswith(".csv"):
+    if file.filename.lower().endswith(".csv"):
         # Read file contents asynchronously
         contents = await file.read()
         buffer = StringIO(contents.decode("utf-8"))
@@ -45,6 +46,47 @@ async def create_upload_file(file: UploadFile):
         # Optional clean up
         buffer.close()
 
-        return {"filename": file.filename, "content_type": file.content_type, "size_bytes": file.size, "rows": len(rows), "columns": len(columns), "column_names": columns, "missing_values": total_missing, "duplicate_rows": len(duplicate_df)}
+        return {
+            "filename": file.filename, 
+            "content_type": file.content_type, 
+            "size_bytes": file.size, "rows": len(rows), 
+            "columns": len(columns), "column_names": columns, 
+            "missing_values": total_missing, 
+            "duplicate_rows": len(duplicate_df)
+        }
+    elif file.filename.lower().endswith(".json"):
+        contents = await file.read()
+
+        try:
+            data = json.loads(contents.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return {"error": "The uploaded file is not valid UTF-8 JSON"}
+
+        response = {
+            "filename": file.filename,
+            "content_type": file.content_type,
+            "size_bytes": file.size,
+            "json_type": type(data).__name__
+        }
+
+        if isinstance(data, list) and all(isinstance(row, dict) for row in data):
+            df = pd.DataFrame(data)
+
+            response.update({
+                "rows": len(df),
+                "columns": len(df.columns),
+                "column_names": df.columns.tolist(),
+                "missing_values": int(df.isnull().sum().sum()),
+                "duplicate_rows": int(df.duplicated(keep=False).sum())
+            })
+        elif isinstance(data, dict):
+            response.update({
+                "keys": list(data.keys()),
+                "key_count": len(data)
+            })
+        else:
+            response["value"] = data
+
+        return response
     else:    
         return {"filename": file.filename, "content_type": file.content_type, "size_bytes": file.size}
