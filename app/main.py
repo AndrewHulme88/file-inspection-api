@@ -1,10 +1,8 @@
-import csv
-import json
-import io
-import pandas as pd
 from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
-from io import StringIO
+import inspectors.csv_inspector as csv_inspector
+import inspectors.json_inspector as json_inspector
+import inspectors.text_inspector as text_inspector
 
 app = FastAPI()
 
@@ -28,100 +26,17 @@ def update_item(item_id: int, item: Item):
 @app.post("/uploadfile/")
 async def create_upload_file(file: UploadFile):
     if file.filename.lower().endswith(".csv"):
-        # Read file contents asynchronously
-        contents = await file.read()
-        buffer = StringIO(contents.decode("utf-8"))
-        # Load bytes into Pandas DataFrame
-        df = pd.read_csv(io.BytesIO(contents))
-        # Find missing/null values per column
-        missing_counts = df.isnull().sum().to_dict()
-        total_missing = int(df.isnull().sum().sum())
-        # Use DictReader to parse and extract headers
-        reader = csv.DictReader(buffer)
-        rows = [row for row in reader]
-        columns = reader.fieldnames
-        # Identify duplicate rows
-        duplicate_mask = df.duplicated(keep=False)
-        duplicate_df = df[duplicate_mask]
-        # Optional clean up
-        buffer.close()
+        result = await csv_inspector.inspect_csv(file)
 
-        return {
-            "filename": file.filename, 
-            "content_type": file.content_type, 
-            "size_bytes": file.size, "rows": len(rows), 
-            "columns": len(columns), "column_names": columns, 
-            "missing_values": total_missing, 
-            "duplicate_rows": len(duplicate_df)
-        }
+        return result
+
     elif file.filename.lower().endswith(".json"):
-        contents = await file.read()
+        result = await json_inspector.inspect_json(file)
 
-        try:
-            data = json.loads(contents.decode("utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError):
-            return {
-                "filename": file.filename,
-                "content_type": file.content_type,
-                "size_bytes": file.size,
-                "valid": False,
-                "error": "The uploaded file is not valid UTF-8 JSON"
-            }
-
-        response = {
-            "filename": file.filename,
-            "content_type": file.content_type,
-            "size_bytes": file.size,
-            "json_type": type(data).__name__,
-            "valid": True
-        }
-
-        if isinstance(data, list) and all(isinstance(row, dict) for row in data):
-            df = pd.DataFrame(data)
-
-            response.update({
-                "rows": len(df),
-                "columns": len(df.columns),
-                "column_names": df.columns.tolist(),
-                "missing_values": int(df.isnull().sum().sum()),
-                "duplicate_rows": int(df.duplicated(keep=False).sum())
-            })
-        elif isinstance(data, dict):
-            response.update({
-                "keys": list(data.keys()),
-                "key_count": len(data)
-            })
-        else:
-            response["value"] = data
-
-        return response
+        return result
     elif file.filename.lower().endswith((".txt", ".md")):
-        contents = await file.read()
+       result = await text_inspector.inspect_text(file)
 
-        try:
-            text = contents.decode("utf-8")
-            encoding = "UTF-8"
-        except UnicodeDecodeError:
-            return {
-                "filename": file.filename,
-                "content_type": file.content_type,
-                "size_bytes": file.size,
-                "valid": False,
-                "error": "The file is not valid UTF-8 text"
-            }
-
-        lines = text.splitlines()
-
-        return {
-            "filename": file.filename,
-            "content_type": file.content_type,
-            "size_bytes": file.size,
-            "file_type": "text",
-            "characters": len(text),
-            "words": len(text.split()),
-            "lines": len(lines),
-            "empty_lines": sum(not line.strip() for line in lines),
-            "encoding": encoding
-        }
+       return result
     else:    
         return {"filename": file.filename, "content_type": file.content_type, "size_bytes": file.size}
