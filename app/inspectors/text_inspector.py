@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+
 async def inspect_text(file):
     contents = await file.read()
 
@@ -5,13 +7,10 @@ async def inspect_text(file):
         text = contents.decode("utf-8")
         encoding = "UTF-8"
     except UnicodeDecodeError:
-        return {
-            "filename": file.filename,
-            "content_type": file.content_type,
-            "size_bytes": file.size,
-            "valid": False,
-            "error": "The file is not valid UTF-8 text"
-        }
+        raise HTTPException(
+            status_code=400,
+            detail="The file is not valid UTF-8 text",
+        )
 
     lines = text.splitlines()
 

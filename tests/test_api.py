@@ -184,6 +184,5 @@ def test_invalid_utf8_text_upload():
         },
     )
 
-    assert response.status_code == 200
-    assert response.json()["valid"] is False
-    assert response.json()["error"] == "The file is not valid UTF-8 text"
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The file is not valid UTF-8 text"}
