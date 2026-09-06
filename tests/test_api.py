@@ -73,3 +73,36 @@ def test_valid_csv_upload():
     assert response.json()["columns"] == 3
     assert response.json()["missing_values"] == 1
     assert response.json()["duplicate_rows"] == 2
+
+def test_valid_text_upload():
+    response = client.post(
+        "/uploadfile/",
+        files={
+            "file": (
+                "sample.txt",
+                b"Hello world\n\nThis is a text file.",
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["file_type"] == "text"
+    assert response.json()["words"] == 7
+    assert response.json()["lines"] == 3
+    assert response.json()["empty_lines"] == 1
+
+def test_empty_csv_upload():
+    response = client.post(
+        "/uploadfile/",
+        files={
+            "file": (
+                "empty.csv",
+                b"",
+                "text/csv",
+            )
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The CSV file is empty"}
