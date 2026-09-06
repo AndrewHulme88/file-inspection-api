@@ -106,3 +106,84 @@ def test_empty_csv_upload():
 
     assert response.status_code == 400
     assert response.json() == {"detail": "The CSV file is empty"}
+
+def test_missing_file():
+    response = client.post("/uploadfile/")
+
+    assert response.status_code == 422
+
+def test_file_too_large():
+    response = client.post(
+        "/uploadfile/",
+        files={
+            "file": (
+                "large.txt",
+                b"x" * (10 * 1024 * 1024 + 1),
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {"detail": "File is too large. Maximum size is 10 MB."}
+
+def test_malformed_csv_upload():
+    response = client.post(
+        "/uploadfile/",
+        files={
+            "file": (
+                "malformed.csv",
+                b'name,email\n"Alice,alice@example.com\n',
+                "text/csv",
+            )
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The CSV file could not be parsed"}
+
+def test_invalid_utf8_csv_upload():
+    response = client.post(
+        "/uploadfile/",
+        files={
+            "file": (
+                "invalid.csv",
+                b"\xff\xfe\xfd",
+                "text/csv",
+            )
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The CSV file is not valid UTF-8 text"}
+
+def test_invalid_utf8_json_upload():
+    response = client.post(
+        "/uploadfile/",
+        files={
+            "file": (
+                "invalid.json",
+                b"\xff\xfe\xfd",
+                "application/json",
+            )
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The uploaded file is not valid UTF-8 JSON"}
+
+def test_invalid_utf8_text_upload():
+    response = client.post(
+        "/uploadfile/",
+        files={
+            "file": (
+                "invalid.txt",
+                b"\xff\xfe\xfd",
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["valid"] is False
+    assert response.json()["error"] == "The file is not valid UTF-8 text"
