@@ -13,7 +13,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 
 @app.get("/health")
 def read_root():
-    return {"Hello": "World"}
+    return {"status": "ok"}
 
 @app.post("/uploadfile/")
 async def create_upload_file(file: UploadFile):

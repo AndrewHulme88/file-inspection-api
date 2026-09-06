@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+from fastapi import HTTPException
 
 async def inspect_json(file):
     contents = await file.read()
@@ -7,13 +8,10 @@ async def inspect_json(file):
     try:
         data = json.loads(contents.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
-        return {
-            "filename": file.filename,
-            "content_type": file.content_type,
-            "size_bytes": file.size,
-            "valid": False,
-            "error": "The uploaded file is not valid UTF-8 JSON"
-        }
+        raise HTTPException(
+            status_code=400,
+            detail="The uploaded file is not valid UTF-8 JSON",
+        )
 
     response = {
         "filename": file.filename,
