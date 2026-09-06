@@ -3,7 +3,11 @@ import app.inspectors.csv_inspector as csv_inspector
 import app.inspectors.json_inspector as json_inspector
 import app.inspectors.text_inspector as text_inspector
 
-app = FastAPI()
+app = FastAPI(
+    title="File Inspection API",
+    description="Upload CSV, JSON, and text files to inspect their contents and structure.",
+    version="1.0.0",
+)
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
 
