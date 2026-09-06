@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, HTTPException
 from pydantic import BaseModel
 import inspectors.csv_inspector as csv_inspector
 import inspectors.json_inspector as json_inspector
@@ -6,7 +6,7 @@ import inspectors.text_inspector as text_inspector
 
 app = FastAPI()
 
-@app.get("/")
+@app.get("/health")
 def read_root():
     return {"Hello": "World"}
 
@@ -26,4 +26,7 @@ async def create_upload_file(file: UploadFile):
 
        return result
     else:    
-        return {"filename": file.filename, "content_type": file.content_type, "size_bytes": file.size}
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type: {file.filename}"
+        )
