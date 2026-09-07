@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, HTTPException
 import app.inspectors.csv_inspector as csv_inspector
 import app.inspectors.json_inspector as json_inspector
 import app.inspectors.text_inspector as text_inspector
+from app.models import InspectionResponse
 
 app = FastAPI(
     title="File Inspection API",
@@ -15,7 +16,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 def read_root():
     return {"status": "ok"}
 
-@app.post("/uploadfile/")
+@app.post("/uploadfile/", response_model=InspectionResponse)
 async def create_upload_file(file: UploadFile):
     if file.size is not None and file.size > MAX_FILE_SIZE:
         raise HTTPException(

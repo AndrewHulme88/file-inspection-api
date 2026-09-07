@@ -38,7 +38,8 @@ async def inspect_csv(file):
     return {
         "filename": file.filename, 
         "content_type": file.content_type, 
-        "size_bytes": file.size, 
+        "size_bytes": file.size,
+        "file_type": "csv",
         "rows": len(rows), 
         "columns": len(columns), 
         "column_names": columns, 

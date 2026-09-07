@@ -17,6 +17,7 @@ async def inspect_json(file):
         "filename": file.filename,
         "content_type": file.content_type,
         "size_bytes": file.size,
+        "file_type": "json",
         "json_type": type(data).__name__,
         "valid": True
     }
