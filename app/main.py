@@ -3,7 +3,7 @@ import time
 from collections import defaultdict, deque
 from typing import Deque
 
-from fastapi import FastAPI, UploadFile, HTTPException, APIRouter, Depends, Header, status
+from fastapi import FastAPI, UploadFile, HTTPException, APIRouter, Depends, Header, status, Request
 import app.inspectors.csv_inspector as csv_inspector
 import app.inspectors.json_inspector as json_inspector
 import app.inspectors.text_inspector as text_inspector
@@ -48,6 +48,10 @@ def get_client_ip(request) -> str:
     if forwarded:
         return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
+
+def rate_limit_dependency(request: Request):
+    rate_limit(request)
+    return None
 
 def rate_limit(request):
     client_ip = get_client_ip(request)
@@ -104,7 +108,7 @@ def read_root():
 async def create_upload_file(
     file: UploadFile,
     _: str = Depends(require_api_key),
-    request=Depends(lambda: None)
+    __: None = Depends(rate_limit_dependency),
 ):
     # request dependency is just a placeholder; you can wire the limiter into a real dependency
     return await handle_upload(file)

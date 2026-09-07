@@ -1,7 +1,22 @@
+import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+import app.main as main
 
 client = TestClient(app)
+API_HEADERS = {"X-API-Key": "your-dev-key"}
+
+@pytest.fixture(autouse=True)
+def reset_rate_limit():
+    main.request_timestamps.clear()
+    original_limit = main.RATE_LIMIT_REQUESTS
+    main.RATE_LIMIT_REQUESTS = 1000
+
+    try:
+        yield
+    finally:
+        main.request_timestamps.clear()
+        main.RATE_LIMIT_REQUESTS = original_limit
 
 def test_health():
     response = client.get("/api/v1/health")
@@ -9,9 +24,41 @@ def test_health():
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
+def test_missing_api_key():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        files={
+            "file": (
+                "test.json",
+                b'{"name": "Alice", "age", 30}',
+                "application/json",
+            )
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Missing API key"
+
+def test_invalid_api_key():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers={"X-API-Key": "wrong-key"},
+        files={
+            "file": (
+                "test.json",
+                b'{"name": "Alice", "age": 30}',
+                "application/json",
+            )
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid API key"
+
 def test_valid_json_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "test.json",
@@ -29,6 +76,7 @@ def test_valid_json_upload():
 def test_invalid_json_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "invalid.json",
@@ -44,6 +92,7 @@ def test_invalid_json_upload():
 def test_unsupported_file_type():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "program.exe",
@@ -59,6 +108,7 @@ def test_unsupported_file_type():
 def test_valid_csv_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "sample.csv",
@@ -77,6 +127,7 @@ def test_valid_csv_upload():
 def test_valid_text_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "sample.txt",
@@ -95,6 +146,7 @@ def test_valid_text_upload():
 def test_empty_csv_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "empty.csv",
@@ -108,13 +160,17 @@ def test_empty_csv_upload():
     assert response.json() == {"detail": "The CSV file is empty"}
 
 def test_missing_file():
-    response = client.post("/api/v1/uploadfile/")
-
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+    )
+    
     assert response.status_code == 422
 
 def test_file_too_large():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "large.txt",
@@ -130,6 +186,7 @@ def test_file_too_large():
 def test_malformed_csv_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "malformed.csv",
@@ -145,6 +202,7 @@ def test_malformed_csv_upload():
 def test_invalid_utf8_csv_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "invalid.csv",
@@ -160,6 +218,7 @@ def test_invalid_utf8_csv_upload():
 def test_invalid_utf8_json_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "invalid.json",
@@ -175,6 +234,7 @@ def test_invalid_utf8_json_upload():
 def test_invalid_utf8_text_upload():
     response = client.post(
         "/api/v1/uploadfile/",
+        headers=API_HEADERS,
         files={
             "file": (
                 "invalid.txt",
