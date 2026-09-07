@@ -4,14 +4,14 @@ from app.main import app
 client = TestClient(app)
 
 def test_health():
-    response = client.get("/health")
+    response = client.get("/api/v1/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 def test_valid_json_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "test.json",
@@ -28,7 +28,7 @@ def test_valid_json_upload():
 
 def test_invalid_json_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "invalid.json",
@@ -43,7 +43,7 @@ def test_invalid_json_upload():
 
 def test_unsupported_file_type():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "program.exe",
@@ -58,7 +58,7 @@ def test_unsupported_file_type():
 
 def test_valid_csv_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "sample.csv",
@@ -76,7 +76,7 @@ def test_valid_csv_upload():
 
 def test_valid_text_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "sample.txt",
@@ -94,7 +94,7 @@ def test_valid_text_upload():
 
 def test_empty_csv_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "empty.csv",
@@ -108,13 +108,13 @@ def test_empty_csv_upload():
     assert response.json() == {"detail": "The CSV file is empty"}
 
 def test_missing_file():
-    response = client.post("/uploadfile/")
+    response = client.post("/api/v1/uploadfile/")
 
     assert response.status_code == 422
 
 def test_file_too_large():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "large.txt",
@@ -129,7 +129,7 @@ def test_file_too_large():
 
 def test_malformed_csv_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "malformed.csv",
@@ -144,7 +144,7 @@ def test_malformed_csv_upload():
 
 def test_invalid_utf8_csv_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "invalid.csv",
@@ -159,7 +159,7 @@ def test_invalid_utf8_csv_upload():
 
 def test_invalid_utf8_json_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "invalid.json",
@@ -174,7 +174,7 @@ def test_invalid_utf8_json_upload():
 
 def test_invalid_utf8_text_upload():
     response = client.post(
-        "/uploadfile/",
+        "/api/v1/uploadfile/",
         files={
             "file": (
                 "invalid.txt",
