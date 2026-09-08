@@ -1,6 +1,6 @@
 # File Inspection API
 
-A FastAPI service for uploading and inspecting CSV, JSON, UTF-8 text, and Markdown files. It returns useful structural information such as row and column counts, JSON shape, or text statistics.
+A FastAPI service for uploading and inspecting CSV, TSV, JSON, YAML, XML, UTF-8 text, and Markdown files. It returns useful structural information such as tabular row and column counts, document shape, or text statistics.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ Returns the service health status:
 
 ### `POST /uploadfile/`
 
-Accepts a multipart form upload with a required `file` field. Supported filename extensions are `.csv`, `.json`, `.txt`, and `.md`.
+Accepts a multipart form upload with a required `file` field. Supported filename extensions are `.csv`, `.tsv`, `.json`, `.yaml`, `.yml`, `.xml`, `.txt`, and `.md`.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/uploadfile/ \
@@ -46,9 +46,12 @@ Every successful result includes the uploaded filename, content type, and size i
 | File type | Additional information returned |
 | --- | --- |
 | CSV | Row count, column count and names, missing-value total, duplicate-row total |
+| TSV | Row count, column count and names, missing-value total, duplicate-row total |
 | JSON object | JSON type, validity, top-level keys, and key count |
 | JSON array of objects | JSON type, validity, row/column counts and names, missing-value and duplicate-row totals |
 | Other valid JSON values | JSON type, validity, and the parsed value |
+| YAML / YML | YAML type, validity, document count, and top-level keys for mapping documents |
+| XML | Root tag, element count, maximum nesting depth, and validity |
 | Text / Markdown | Character, word, line, and empty-line counts; UTF-8 encoding |
 
 For example, a CSV upload can return:
@@ -70,7 +73,7 @@ For example, a CSV upload can return:
 
 | Status | When it occurs |
 | --- | --- |
-| 400 | Unsupported extension, invalid UTF-8, invalid JSON, empty CSV, or unparseable CSV |
+| 400 | Unsupported extension, invalid UTF-8, malformed JSON/YAML/XML, or empty/unparseable CSV/TSV |
 | 413 | Uploaded file exceeds 10 MB |
 | 422 | The required `file` field is missing |
 

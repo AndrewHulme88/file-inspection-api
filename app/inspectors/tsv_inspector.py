@@ -28,7 +28,7 @@ async def inspect_tsv(file):
 
     buffer = StringIO(text)
     total_missing = int(df.isnull().sum().sum())
-    reader = csv.DictReader(buffer)
+    reader = csv.DictReader(buffer, delimiter="\t")
     rows = [row for row in reader]
     columns = reader.fieldnames
     duplicate_mask = df.duplicated(keep=False)

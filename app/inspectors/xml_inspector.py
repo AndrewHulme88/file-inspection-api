@@ -13,7 +13,13 @@ async def inspect_xml(file):
     contents = await file.read()
 
     try:
-        root = ElementTree.fromstring(contents)
+        text = contents.decode("utf-8")
+        root = ElementTree.fromstring(text)
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="The XML file is not valid UTF-8 text",
+        )
     except ElementTree.ParseError:
         raise HTTPException(
             status_code=400,

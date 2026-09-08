@@ -246,3 +246,126 @@ def test_invalid_utf8_text_upload():
 
     assert response.status_code == 400
     assert response.json() == {"detail": "The file is not valid UTF-8 text"}
+
+def test_valid_tsv_upload():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                "sample.tsv",
+                b"name\tage\nAlice\t30\nBob\t\nAlice\t30\n",
+                "text/tab-separated-values",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["file_type"] == "tsv"
+    assert response.json()["rows"] == 3
+    assert response.json()["columns"] == 2
+    assert response.json()["missing_values"] == 1
+    assert response.json()["duplicate_rows"] == 2
+
+@pytest.mark.parametrize("filename", ["sample.yaml", "sample.yml"])
+def test_valid_yaml_upload(filename):
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                filename,
+                b"name: Alice\nage: 30\n",
+                "application/yaml",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["file_type"] == "yaml"
+    assert response.json()["yaml_type"] == "dict"
+    assert response.json()["key_count"] == 2
+
+def test_valid_xml_upload():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                "sample.xml",
+                b"<catalog><book><title>Example</title></book></catalog>",
+                "application/xml",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["file_type"] == "xml"
+    assert response.json()["root_tag"] == "catalog"
+    assert response.json()["element_count"] == 3
+    assert response.json()["max_depth"] == 3
+    assert response.json()["valid"] is True
+
+def test_malformed_tsv_upload():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                "malformed.tsv",
+                b'name\tage\n"Alice\t30\n',
+                "text/tab-separated-values",
+            )
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The TSV file could not be parsed"}
+
+def test_malformed_yaml_upload():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={"file": ("malformed.yaml", b"name: [Alice\n", "application/yaml")},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The YAML file could not be parsed"}
+
+def test_malformed_xml_upload():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={"file": ("malformed.xml", b"<catalog><book></catalog>", "application/xml")},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The XML file could not be parsed"}
+
+@pytest.mark.parametrize(
+    ("filename", "content_type", "detail"),
+    [
+        ("invalid.yaml", "application/yaml", "The uploaded file is not valid UTF-8 YAML"),
+        ("invalid.xml", "application/xml", "The XML file is not valid UTF-8 text"),
+    ],
+)
+def test_invalid_utf8_yaml_and_xml_upload(filename, content_type, detail):
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={"file": (filename, b"\xff\xfe\xfd", content_type)},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": detail}
+
+@pytest.mark.parametrize("filename", ["program.exe", "archive.zip"])
+def test_unsupported_file_extensions_return_400(filename):
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={"file": (filename, b"not supported", "application/octet-stream")},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": f"Unsupported file type: {filename}"}
