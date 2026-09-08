@@ -35,4 +35,22 @@ class TextInspection(FileInspectionBase):
     empty_lines: int
     encoding: str
 
-InspectionResponse = CsvInspection | JsonInspection | TextInspection
+class TsvInspection(CsvInspection):
+    file_type: Literal['tsv'] = "tsv"
+
+class YamlInspection(FileInspectionBase):
+    file_type: Literal["yaml"] = "yaml"
+    yaml_type: str
+    valid: bool
+    keys: list[str] | None = None
+    key_count: int | None = None
+    documents: int
+
+class XmlInspection(FileInspectionBase):
+    file_type: Literal["xml"] = "xml"
+    root_tag: str
+    element_count: int
+    max_depth: int
+    valid: bool
+
+InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection

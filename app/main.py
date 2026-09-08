@@ -7,8 +7,11 @@ from fastapi import FastAPI, UploadFile, HTTPException, APIRouter, Depends, Head
 import app.inspectors.csv_inspector as csv_inspector
 import app.inspectors.json_inspector as json_inspector
 import app.inspectors.text_inspector as text_inspector
-from app.models import InspectionResponse
+import app.inspectors.tsv_inspector as tsv_inspector
+import app.inspectors.yaml_inspector as yaml_inspector
+import app.inspectors.xml_inspector as xml_inspector
 
+from app.models import InspectionResponse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -92,6 +95,15 @@ async def handle_upload(file: UploadFile):
 
     if filename.endswith((".txt", ".md")):
        return await text_inspector.inspect_text(file)
+
+    if filename.endswith(".tsv"):
+        return await tsv_inspector.inspect_tsv(file)
+
+    if filename.endswith((".yaml", ".yml")):
+        return await yaml_inspector.inspect_yaml(file)
+
+    if filename.endswith(".xml"):
+        return await xml_inspector.inspect_xml(file)
 
     else:    
         raise HTTPException(
