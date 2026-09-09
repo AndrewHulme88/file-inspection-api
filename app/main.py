@@ -11,6 +11,7 @@ import app.inspectors.tsv_inspector as tsv_inspector
 import app.inspectors.yaml_inspector as yaml_inspector
 import app.inspectors.xml_inspector as xml_inspector
 import app.inspectors.ndjson_inspector as ndjson_inspector
+import app.inspectors.excel_inspector as excel_inspector
 
 from app.models import InspectionResponse
 from dotenv import load_dotenv
@@ -108,6 +109,9 @@ async def handle_upload(file: UploadFile):
 
     if filename.endswith((".ndjson", ".jsonl")):
         return await ndjson_inspector.inspect_ndjson(file)
+
+    if filename.endswith(".xlsx"):
+        return await excel_inspector.inspect_excel(file)
 
     else:    
         raise HTTPException(

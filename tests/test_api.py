@@ -2,6 +2,8 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 import app.main as main
+import io
+import pandas as pd
 
 client = TestClient(app)
 API_HEADERS = {"X-API-Key": "your-dev-key"}
@@ -388,3 +390,34 @@ def test_valid_ndjson_upload(filename):
     assert response.json()["file_type"] == "ndjson"
     assert response.json()["rows"] == 2
     assert response.json()["column_names"] == ["event", "user"]
+
+def test_valid_excel_upload():
+    output = io.BytesIO()
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        pd.DataFrame(
+            {"name": ["Alice", "Bob"], "age": [30, None]}
+        ).to_excel(writer, sheet_name="People", index=False)
+
+        pd.DataFrame(
+            {"event": ["login"]}
+        ).to_excel(writer, sheet_name="Events", index=False)
+
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                "report.xlsx",
+                output.getvalue(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["file_type"] == "xlsx"
+    assert body["sheet_count"] == 2
+    assert body["sheets"][0]["name"] == "People"
+    assert body["sheets"][0]["rows"] == 2

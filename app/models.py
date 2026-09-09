@@ -56,4 +56,17 @@ class XmlInspection(FileInspectionBase):
 class NdjsonInspection(CsvInspection):
     file_type: Literal['ndjson'] = "ndjson"
 
-InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection
+class ExcelSheetInspection(BaseModel):
+    name: str
+    rows: int
+    columns: int
+    column_names: list[str]
+    missing_values: int
+    duplicate_rows: int
+
+class ExcelInspection(FileInspectionBase):
+    file_type: Literal["xlsx"] = "xlsx"
+    sheet_count: int
+    sheets: list[ExcelSheetInspection]
+
+InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection | ExcelInspection
