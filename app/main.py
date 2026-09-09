@@ -10,6 +10,7 @@ import app.inspectors.text_inspector as text_inspector
 import app.inspectors.tsv_inspector as tsv_inspector
 import app.inspectors.yaml_inspector as yaml_inspector
 import app.inspectors.xml_inspector as xml_inspector
+import app.inspectors.ndjson_inspector as ndjson_inspector
 
 from app.models import InspectionResponse
 from dotenv import load_dotenv
@@ -104,6 +105,9 @@ async def handle_upload(file: UploadFile):
 
     if filename.endswith(".xml"):
         return await xml_inspector.inspect_xml(file)
+
+    if filename.endswith((".ndjson", ".jsonl")):
+        return await ndjson_inspector.inspect_ndjson(file)
 
     else:    
         raise HTTPException(

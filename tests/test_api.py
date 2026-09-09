@@ -369,3 +369,22 @@ def test_unsupported_file_extensions_return_400(filename):
 
     assert response.status_code == 400
     assert response.json() == {"detail": f"Unsupported file type: {filename}"}
+
+@pytest.mark.parametrize("filename", ["events.ndjson", "events.jsonl"])
+def test_valid_ndjson_upload(filename):
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                filename,
+                b'{"event":"login","user":"alice"}\n{"event":"login","user":"bob"}\n',
+                "application/x-ndjson",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["file_type"] == "ndjson"
+    assert response.json()["rows"] == 2
+    assert response.json()["column_names"] == ["event", "user"]

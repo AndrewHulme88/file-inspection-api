@@ -53,4 +53,7 @@ class XmlInspection(FileInspectionBase):
     max_depth: int
     valid: bool
 
-InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection
+class NdjsonInspection(CsvInspection):
+    file_type: Literal['ndjson'] = "ndjson"
+
+InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection
