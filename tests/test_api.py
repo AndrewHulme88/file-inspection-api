@@ -421,3 +421,28 @@ def test_valid_excel_upload():
     assert body["sheet_count"] == 2
     assert body["sheets"][0]["name"] == "People"
     assert body["sheets"][0]["rows"] == 2
+
+def test_valid_parquet_upload():
+    dataframe = pd.DataFrame(
+        {"name": ["Alice", "Bob"], "age": [30, None]}
+    )
+    output = io.BytesIO()
+    dataframe.to_parquet(output, engine="pyarrow", index=False)
+
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                "people.parquet",
+                output.getvalue(),
+                "application/vnd.apache.parquet",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["file_type"] == "parquet"
+    assert body["rows"] == 2
+    assert body["column_types"]["name"] in {"object", "str"}

@@ -69,4 +69,13 @@ class ExcelInspection(FileInspectionBase):
     sheet_count: int
     sheets: list[ExcelSheetInspection]
 
-InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection | ExcelInspection
+class ParquetInspection(FileInspectionBase):
+    file_type: Literal["parquet"] = "parquet"
+    rows: int
+    columns: int
+    column_names: list[str]
+    column_types: dict[str, str]
+    missing_values: int
+    duplicate_rows: int
+
+InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection | ExcelInspection | ParquetInspection

@@ -12,6 +12,7 @@ import app.inspectors.yaml_inspector as yaml_inspector
 import app.inspectors.xml_inspector as xml_inspector
 import app.inspectors.ndjson_inspector as ndjson_inspector
 import app.inspectors.excel_inspector as excel_inspector
+import app.inspectors.parquet_inspector as parquet_inspector
 
 from app.models import InspectionResponse
 from dotenv import load_dotenv
@@ -112,6 +113,9 @@ async def handle_upload(file: UploadFile):
 
     if filename.endswith(".xlsx"):
         return await excel_inspector.inspect_excel(file)
+
+    if filename.endswith(".parquet"):
+        return await parquet_inspector.inspect_parquet(file)
 
     else:    
         raise HTTPException(
