@@ -1,6 +1,6 @@
 # File Inspection API
 
-A FastAPI service for uploading and inspecting CSV, TSV, JSON, YAML, XML, UTF-8 text, and Markdown files. It returns useful structural information such as tabular row and column counts, document shape, or text statistics.
+A FastAPI service for uploading and inspecting data, configuration, spreadsheet, markup, and UTF-8 text files. It returns useful structural information such as tabular row and column counts, document shape, or text statistics.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ The API is then available at `http://127.0.0.1:8000`. Interactive API documentat
 
 ## Endpoints
 
-### `GET /health`
+### `GET /api/v1/health`
 
 Returns the service health status:
 
@@ -28,12 +28,15 @@ Returns the service health status:
 {"status": "ok"}
 ```
 
-### `POST /uploadfile/`
+### `POST /api/v1/uploadfile/`
 
-Accepts a multipart form upload with a required `file` field. Supported filename extensions are `.csv`, `.tsv`, `.json`, `.yaml`, `.yml`, `.xml`, `.txt`, and `.md`.
+Accepts a multipart form upload with a required `file` field. Supported filename extensions are `.csv`, `.tsv`, `.json`, `.ndjson`, `.jsonl`, `.yaml`, `.yml`, `.xml`, `.toml`, `.ini`, `.html`, `.htm`, `.xlsx`, `.xls`, `.ods`, `.parquet`, `.txt`, `.md`, and `.log`.
+
+Uploads require an `X-API-Key` header. Its value is the configured `FILE_INSPECTION_API_KEY` (or `dev-local-key` when it is not configured).
 
 ```bash
-curl -X POST http://127.0.0.1:8000/uploadfile/ \
+curl -X POST http://127.0.0.1:8000/api/v1/uploadfile/ \
+  -H "X-API-Key: dev-local-key" \
   -F "file=@sample.csv"
 ```
 
@@ -50,9 +53,15 @@ Every successful result includes the uploaded filename, content type, and size i
 | JSON object | JSON type, validity, top-level keys, and key count |
 | JSON array of objects | JSON type, validity, row/column counts and names, missing-value and duplicate-row totals |
 | Other valid JSON values | JSON type, validity, and the parsed value |
+| NDJSON / JSONL | Row count, column count and names, missing-value total, duplicate-row total |
 | YAML / YML | YAML type, validity, document count, and top-level keys for mapping documents |
 | XML | Root tag, element count, maximum nesting depth, and validity |
-| Text / Markdown | Character, word, line, and empty-line counts; UTF-8 encoding |
+| TOML | Validity, top-level keys, and key count |
+| INI | Validity, section names and count, and setting count |
+| HTML / HTM | Page title (when present), heading and link counts, text-character count, and validity |
+| XLSX / XLS / ODS | Workbook sheet count plus per-sheet row/column counts and names, missing-value total, and duplicate-row total |
+| Parquet | Row/column counts and names, column data types, missing-value total, and duplicate-row total |
+| Text / Markdown / Log | Character, word, line, and empty-line counts; UTF-8 encoding |
 
 For example, a CSV upload can return:
 

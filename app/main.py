@@ -24,7 +24,7 @@ load_dotenv()
 
 app = FastAPI(
     title="File Inspection API",
-    description="Upload CSV, JSON, and text files to inspect their contents and structure.",
+    description="Upload supported data, document, spreadsheet, and text files to inspect their contents and structure.",
     version="1.0.0",
 )
 

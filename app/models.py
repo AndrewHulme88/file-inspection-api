@@ -84,7 +84,7 @@ class TomlInspection(FileInspectionBase):
     keys: list[str] | None = None
     key_count: int | None = None
 
-class IniInspection(BaseModel):
+class IniInspection(FileInspectionBase):
     file_type: Literal["ini"] = "ini"
     section_count: int
     sections: list[str]
@@ -93,7 +93,7 @@ class IniInspection(BaseModel):
 
 class HtmlInspection(FileInspectionBase):
     file_type: Literal["html"] = "html"
-    title: str
+    title: str | None = None
     heading_count: int
     link_count: int
     text_characters: int

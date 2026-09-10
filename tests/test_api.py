@@ -446,3 +446,83 @@ def test_valid_parquet_upload():
     assert body["file_type"] == "parquet"
     assert body["rows"] == 2
     assert body["column_types"]["name"] in {"object", "str"}
+
+
+def test_valid_toml_upload():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                "settings.toml",
+                b'title = "File Inspector"\n[database]\nhost = "localhost"\n',
+                "application/toml",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["file_type"] == "toml"
+    assert response.json()["keys"] == ["title", "database"]
+    assert response.json()["key_count"] == 2
+
+
+def test_valid_ini_upload():
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={
+            "file": (
+                "settings.ini",
+                b"[database]\nhost = localhost\nport = 5432\n[logging]\nlevel = INFO\n",
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["filename"] == "settings.ini"
+    assert body["file_type"] == "ini"
+    assert body["sections"] == ["database", "logging"]
+    assert body["setting_count"] == 3
+
+
+@pytest.mark.parametrize(
+    ("filename", "contents"),
+    [
+        (
+            "page.html",
+            b"<html><head><title>Example</title></head><body><h1>Hello</h1><a href='/about'>About</a></body></html>",
+        ),
+        ("fragment.htm", b"<main><h2>Untitled</h2></main>"),
+    ],
+)
+def test_valid_html_upload(filename, contents):
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={"file": (filename, contents, "text/html")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["file_type"] == "html"
+    assert body["heading_count"] == 1
+    if filename == "page.html":
+        assert body["title"] == "Example"
+        assert body["link_count"] == 1
+    else:
+        assert body["title"] is None
+
+
+@pytest.mark.parametrize("filename", ["notes.log", "notes.md"])
+def test_text_file_extension_aliases(filename):
+    response = client.post(
+        "/api/v1/uploadfile/",
+        headers=API_HEADERS,
+        files={"file": (filename, b"A short note.", "text/plain")},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["file_type"] == "text"
