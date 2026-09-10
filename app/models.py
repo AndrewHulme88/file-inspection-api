@@ -84,4 +84,11 @@ class TomlInspection(FileInspectionBase):
     keys: list[str] | None = None
     key_count: int | None = None
 
-InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection | ExcelInspection | ParquetInspection
+class IniInspection(BaseModel):
+    file_type: Literal["ini"] = "ini"
+    section_count: int
+    sections: list[str]
+    setting_count: int
+    valid: bool
+
+InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection | ExcelInspection | ParquetInspection | TomlInspection | IniInspection

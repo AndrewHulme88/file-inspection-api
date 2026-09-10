@@ -14,6 +14,7 @@ import app.inspectors.ndjson_inspector as ndjson_inspector
 import app.inspectors.excel_inspector as excel_inspector
 import app.inspectors.parquet_inspector as parquet_inspector
 import app.inspectors.toml_inspector as toml_inspector
+import app.inspectors.ini_inspector as ini_inspector
 
 from app.models import InspectionResponse
 from dotenv import load_dotenv
@@ -117,8 +118,12 @@ async def handle_upload(file: UploadFile):
 
     if filename.endswith(".parquet"):
         return await parquet_inspector.inspect_parquet(file)
+    
     if filename.endswith(".toml"):
         return await toml_inspector.inspect_toml(file)
+
+    if filename.endswith(".ini"):
+        return await ini_inspector.inspect_ini(file)
 
     else:    
         raise HTTPException(
