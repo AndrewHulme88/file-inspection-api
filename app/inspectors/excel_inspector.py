@@ -1,6 +1,7 @@
 import io
 import pandas as pd
 from fastapi import HTTPException
+from pathlib import Path
 
 
 async def inspect_excel(file):
@@ -15,6 +16,7 @@ async def inspect_excel(file):
         )
 
     sheets = []
+    file_type = Path(file.filename).suffix.lower().lstrip(".")
 
     try:
         for sheet_name in workbook.sheet_names:
@@ -38,7 +40,7 @@ async def inspect_excel(file):
         "filename": file.filename,
         "content_type": file.content_type,
         "size_bytes": file.size,
-        "file_type": "xlsx",
+        "file_type": file_type,
         "sheet_count": len(sheets),
         "sheets": sheets,
     }

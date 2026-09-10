@@ -65,7 +65,7 @@ class ExcelSheetInspection(BaseModel):
     duplicate_rows: int
 
 class ExcelInspection(FileInspectionBase):
-    file_type: Literal["xlsx"] = "xlsx"
+    file_type: Literal["xlsx", "xls", "ods"]
     sheet_count: int
     sheets: list[ExcelSheetInspection]
 
@@ -77,5 +77,11 @@ class ParquetInspection(FileInspectionBase):
     column_types: dict[str, str]
     missing_values: int
     duplicate_rows: int
+
+class TomlInspection(FileInspectionBase):
+    file_type: Literal["toml"] = "toml"
+    valid: bool
+    keys: list[str] | None = None
+    key_count: int | None = None
 
 InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection | ExcelInspection | ParquetInspection

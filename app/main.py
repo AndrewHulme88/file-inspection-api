@@ -13,6 +13,7 @@ import app.inspectors.xml_inspector as xml_inspector
 import app.inspectors.ndjson_inspector as ndjson_inspector
 import app.inspectors.excel_inspector as excel_inspector
 import app.inspectors.parquet_inspector as parquet_inspector
+import app.inspectors.toml_inspector as toml_inspector
 
 from app.models import InspectionResponse
 from dotenv import load_dotenv
@@ -111,11 +112,13 @@ async def handle_upload(file: UploadFile):
     if filename.endswith((".ndjson", ".jsonl")):
         return await ndjson_inspector.inspect_ndjson(file)
 
-    if filename.endswith(".xlsx"):
+    if filename.endswith((".xlsx", ".xls", ".ods")):
         return await excel_inspector.inspect_excel(file)
 
     if filename.endswith(".parquet"):
         return await parquet_inspector.inspect_parquet(file)
+    if filename.endswith(".toml"):
+        return await toml_inspector.inspect_toml(file)
 
     else:    
         raise HTTPException(
