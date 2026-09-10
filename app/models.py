@@ -91,4 +91,12 @@ class IniInspection(BaseModel):
     setting_count: int
     valid: bool
 
-InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection | ExcelInspection | ParquetInspection | TomlInspection | IniInspection
+class HtmlInspection(FileInspectionBase):
+    file_type: Literal["html"] = "html"
+    title: str
+    heading_count: int
+    link_count: int
+    text_characters: int
+    valid: bool
+
+InspectionResponse = CsvInspection | JsonInspection | TextInspection | TsvInspection | YamlInspection | XmlInspection | NdjsonInspection | ExcelInspection | ParquetInspection | TomlInspection | IniInspection | HtmlInspection

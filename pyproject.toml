@@ -11,6 +11,7 @@ dependencies = [
     "pyarrow",
     "xlrd>=2.0.2",
     "odfpy>=1.4.1",
+    "beautifulsoup4>=4.15.0",
 ]
 
 [dependency-groups]

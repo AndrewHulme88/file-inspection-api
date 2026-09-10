@@ -15,6 +15,7 @@ import app.inspectors.excel_inspector as excel_inspector
 import app.inspectors.parquet_inspector as parquet_inspector
 import app.inspectors.toml_inspector as toml_inspector
 import app.inspectors.ini_inspector as ini_inspector
+import app.inspectors.html_inspector as html_inspector
 
 from app.models import InspectionResponse
 from dotenv import load_dotenv
@@ -98,7 +99,7 @@ async def handle_upload(file: UploadFile):
     if filename.endswith(".json"):
         return await json_inspector.inspect_json(file)
 
-    if filename.endswith((".txt", ".md")):
+    if filename.endswith((".txt", ".md", ".log")):
        return await text_inspector.inspect_text(file)
 
     if filename.endswith(".tsv"):
@@ -124,6 +125,9 @@ async def handle_upload(file: UploadFile):
 
     if filename.endswith(".ini"):
         return await ini_inspector.inspect_ini(file)
+
+    if filename.endswith((".html", ".htm")):
+        return await html_inspector.inspect_html(file)
 
     else:    
         raise HTTPException(
